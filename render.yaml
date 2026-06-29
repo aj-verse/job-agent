@@ -31,4 +31,4 @@ services:
       - key: RUN_SCRIPTS
         value: "1"
       - key: SCHEDULER_API_KEY
-        generate: true # Render will automatically generate a secure random API key for the scheduler webhook
+        generateValue: true # Render will automatically generate a secure random API key for the scheduler webhook
