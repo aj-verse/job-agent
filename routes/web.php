@@ -57,3 +57,32 @@ Route::middleware('auth')->group(function () {
         Route::post('/authenticate', [SettingController::class, 'authenticate'])->name('settings.authenticate');
     });
 });
+
+// Scheduler webhook (for free-tier deployment on platforms like Render)
+Route::match(['get', 'post'], '/api/scheduler/run', function (\Illuminate\Http\Request $request) {
+    $apiKey = env('SCHEDULER_API_KEY');
+    if (empty($apiKey)) {
+        return response()->json(['error' => 'Scheduler API key is not configured.'], 500);
+    }
+    
+    $token = $request->header('X-Scheduler-Token') ?? $request->input('token');
+    if ($token !== $apiKey) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    try {
+        // Run the Laravel scheduler
+        \Illuminate\Support\Facades\Artisan::call('schedule:run');
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        return response()->json([
+            'success' => true,
+            'message' => 'Scheduler executed successfully.',
+            'output' => trim($output)
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => 'Scheduler error: ' . $e->getMessage()
+        ], 500);
+    }
+});

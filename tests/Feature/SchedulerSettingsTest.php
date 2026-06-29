@@ -70,4 +70,47 @@ class SchedulerSettingsTest extends TestCase
 
         $response->assertSessionHasErrors(['daily_run_time', 'timezone']);
     }
+
+    /**
+     * Test that the scheduler webhook returns 500 when no API key is configured.
+     */
+    public function test_scheduler_webhook_requires_configured_api_key()
+    {
+        // Disable the env key for this test
+        putenv('SCHEDULER_API_KEY=');
+        
+        $response = $this->get('/api/scheduler/run');
+        $response->assertStatus(500);
+        $response->assertJsonFragment(['error' => 'Scheduler API key is not configured.']);
+    }
+
+    /**
+     * Test that the scheduler webhook rejects invalid API keys.
+     */
+    public function test_scheduler_webhook_rejects_invalid_api_key()
+    {
+        putenv('SCHEDULER_API_KEY=test-api-token');
+
+        $response = $this->get('/api/scheduler/run?token=wrong-token');
+        $response->assertStatus(401);
+        $response->assertJsonFragment(['error' => 'Unauthorized']);
+
+        // Clean up
+        putenv('SCHEDULER_API_KEY=');
+    }
+
+    /**
+     * Test that the scheduler webhook runs successfully when a valid token is provided.
+     */
+    public function test_scheduler_webhook_runs_successfully_with_valid_api_key()
+    {
+        putenv('SCHEDULER_API_KEY=test-api-token');
+
+        $response = $this->get('/api/scheduler/run?token=test-api-token');
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['success' => true]);
+
+        // Clean up
+        putenv('SCHEDULER_API_KEY=');
+    }
 }

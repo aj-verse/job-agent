@@ -1,0 +1,15 @@
+.git
+.github
+.env
+/node_modules
+/vendor
+/storage/*.sqlite
+/storage/logs/*.log
+/public/build
+/bootstrap/cache/*
+phpunit.xml
+.phpunit.result.cache
+tests
+README.md
+Dockerfile
+render.yaml

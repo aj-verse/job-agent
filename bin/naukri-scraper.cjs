@@ -2,6 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 function getBrowserPath() {
+    // Use container-installed Chromium path if defined in environment variables (standard for Linux/Render)
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        return process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+
     const programFiles = process.env.PROGRAMFILES || 'C:\\Program Files';
     const programFilesX86 = process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)';
     const localAppData = process.env.LOCALAPPDATA || (process.env.USERPROFILE ? path.join(process.env.USERPROFILE, 'AppData\\Local') : null);
@@ -24,6 +29,19 @@ function getBrowserPath() {
         }
     }
     return undefined;
+}
+
+function getHeadlessMode(defaultMode = true) {
+    if (process.env.PUPPETEER_HEADLESS !== undefined) {
+        const val = process.env.PUPPETEER_HEADLESS;
+        if (val === 'new' || val === 'true') return 'new';
+        return false;
+    }
+    // Default to headless on Linux/production environments
+    if (process.platform !== 'win32') {
+        return 'new';
+    }
+    return defaultMode;
 }
 
 // Parse command line arguments
@@ -82,7 +100,7 @@ async function runLogin(puppeteer) {
 
     const browser = await puppeteer.launch({
         executablePath: getBrowserPath(),
-        headless: false, // MUST be false so user can solve manual Captchas if they pop up
+        headless: getHeadlessMode(false), // default false for local manual captchas
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -155,7 +173,7 @@ async function runSearch(puppeteer) {
 
     const browser = await puppeteer.launch({
         executablePath: getBrowserPath(),
-        headless: 'new',
+        headless: getHeadlessMode(true),
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -240,7 +258,7 @@ async function runApply(puppeteer) {
 
     const browser = await puppeteer.launch({
         executablePath: getBrowserPath(),
-        headless: false,
+        headless: getHeadlessMode(false),
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',

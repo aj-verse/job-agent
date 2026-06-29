@@ -20,7 +20,7 @@ class NaukriAutomationService
         }
         
         try {
-            $nodePath = base_path('bin/node-portable/node-v20.11.0-win-x64/node.exe');
+            $nodePath = $this->getNodePath();
             $scriptPath = base_path('bin/naukri-scraper.cjs');
 
             $command = [
@@ -71,7 +71,7 @@ class NaukriAutomationService
         }
 
         try {
-            $nodePath = base_path('bin/node-portable/node-v20.11.0-win-x64/node.exe');
+            $nodePath = $this->getNodePath();
             $scriptPath = base_path('bin/naukri-scraper.cjs');
 
             $command = [
@@ -125,7 +125,7 @@ class NaukriAutomationService
     public function loginAndExtractSession(): array
     {
         try {
-            $nodePath = base_path('bin/node-portable/node-v20.11.0-win-x64/node.exe');
+            $nodePath = $this->getNodePath();
             $scriptPath = base_path('bin/naukri-scraper.cjs');
 
             $command = [
@@ -212,5 +212,17 @@ class NaukriAutomationService
             array_filter($criticalEnv),
             $extra
         );
+    }
+
+    /**
+     * Resolve the path to the Node.js executable based on the operating system.
+     */
+    protected function getNodePath(): string
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            return base_path('bin/node-portable/node-v20.11.0-win-x64/node.exe');
+        }
+        
+        return 'node';
     }
 }
